@@ -36,10 +36,6 @@ const Cierre = sequelize.define('Cierre', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  estado: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true
-  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

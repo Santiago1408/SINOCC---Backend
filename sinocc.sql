@@ -27,7 +27,6 @@ CREATE TABLE "cierres" (
   "fechaInicio" DATE NOT NULL,
   "fechaFin" DATE NOT NULL,
   "descripcion" TEXT,
-  "estado" BOOLEAN DEFAULT true,
   "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   "modifiedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

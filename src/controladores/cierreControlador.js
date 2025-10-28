@@ -16,7 +16,6 @@ const crearCierre = async (req, res) => {
       fechaInicio,
       fechaFin,
       descripcion,
-      estado: true
     });
 
     const ubicacionesCreadas = await Promise.all(
@@ -59,10 +58,6 @@ const listarCierres = async (req, res) => {
     const { estado, zona, activos } = req.query;
 
     const condiciones = {};
-
-    if (estado !== undefined) {
-      condiciones.estado = estado === 'true';
-    }
 
     if (zona) {
       condiciones.idZona = zona;
@@ -131,7 +126,6 @@ const actualizarCierre = async (req, res) => {
     if (fechaInicio) datosActualizados.fechaInicio = fechaInicio;
     if (fechaFin) datosActualizados.fechaFin = fechaFin;
     if (descripcion !== undefined) datosActualizados.descripcion = descripcion;
-    if (estado !== undefined) datosActualizados.estado = estado;
 
     await cierre.update(datosActualizados);
 
@@ -188,7 +182,6 @@ const obtenerCierresActivos = async (req, res) => {
 
     const cierresActivos = await Cierre.findAll({
       where: {
-        estado: true,
         fechaInicio: {
           [Op.lte]: hoy
         },

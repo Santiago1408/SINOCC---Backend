@@ -56,6 +56,24 @@ const iniciarServidor = async () => {
     await sequelize.sync({ alter: false });
     console.log('Modelos sincronizados con la base de datos');
 
+    // AGREGAR ESTAS LÍNEAS:
+    // Inicializar zonas base
+    const Zona = require('./src/modelos/Zona');
+    const zonasBase = [
+      { nombreZona: 'Quillacollo' },
+      { nombreZona: 'Sacaba' },
+      { nombreZona: 'Zona Centro' }
+    ];
+
+    for (const zonaData of zonasBase) {
+      await Zona.findOrCreate({
+        where: { nombreZona: zonaData.nombreZona },
+        defaults: zonaData
+      });
+    }
+    console.log('Zonas base verificadas/creadas');
+    // FIN DE LÍNEAS AGREGADAS
+
     iniciarProgramadorNotificaciones();
 
     app.listen(configuracion.servidor.puerto, () => {

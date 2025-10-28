@@ -9,18 +9,27 @@ const {
   obtenerCierresActivos
 } = require('../controladores/cierreControlador');
 const { validarCierre } = require('../middlewares/validaciones');
-const { verificarToken, esAdministrador } = require('../middlewares/autenticacion');
+const { verificarToken, verificarRol } = require('../middlewares/autenticacion');
 
-router.post('/', verificarToken, esAdministrador, validarCierre, crearCierre);
+// Crear verificador que acepta administrador y superadmin
+const puedeGestionarCierres = verificarRol('administrador', 'superadmin');
 
+// Crear cierre - Admin y SuperAdmin
+router.post('/', verificarToken, puedeGestionarCierres, validarCierre, crearCierre);
+
+// Listar cierres - Público
 router.get('/', listarCierres);
 
+// Obtener cierres activos - Público
 router.get('/activos', obtenerCierresActivos);
 
+// Obtener cierre por ID - Público
 router.get('/:id', obtenerCierre);
 
-router.put('/:id', verificarToken, esAdministrador, actualizarCierre);
+// Actualizar cierre - Admin y SuperAdmin
+router.put('/:id', verificarToken, puedeGestionarCierres, actualizarCierre);
 
-router.delete('/:id', verificarToken, esAdministrador, eliminarCierre);
+// Eliminar cierre - Admin y SuperAdmin
+router.delete('/:id', verificarToken, puedeGestionarCierres, eliminarCierre);
 
 module.exports = router;

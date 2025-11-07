@@ -7,17 +7,31 @@ const { respuestaExitosa, respuestaError } = require('../utilidades/respuestas')
 
 const crearCierre = async (req, res) => {
   try {
-    const { categoria, lugarCierre, idZona, fechaInicio, fechaFin, descripcion, ubicaciones } = req.body;
+    const { 
+      categoria, 
+      lugarCierre, 
+      idZona, 
+      fechaInicio, 
+      fechaFin, 
+      horaInicio,
+      horaFin,
+      descripcion, 
+      ubicaciones 
+    } = req.body;
 
+    // Crear el cierre con los nuevos campos
     const nuevoCierre = await Cierre.create({
       categoria,
       lugarCierre,
       idZona,
-      fechaInicio,
-      fechaFin,
-      descripcion,
+      fechaInicio: fechaInicio || null,
+      fechaFin: fechaFin || null,
+      horaInicio: horaInicio || null,
+      horaFin: horaFin || null,
+      descripcion
     });
 
+    // Crear las ubicaciones asociadas
     const ubicacionesCreadas = await Promise.all(
       ubicaciones.map(ubicacion =>
         UbicacionCierre.create({
@@ -28,17 +42,28 @@ const crearCierre = async (req, res) => {
       )
     );
 
-    const fechaNotificacion = new Date(fechaInicio);
-    fechaNotificacion.setDate(fechaNotificacion.getDate() - 1);
+    // Calcular fecha de notificación
+    let fechaNotificacion;
+    
+    if (fechaInicio) {
+      // Si hay fecha de inicio, notificar 24 horas antes
+      fechaNotificacion = new Date(fechaInicio);
+      fechaNotificacion.setDate(fechaNotificacion.getDate() - 1);
+    } else {
+      // Si solo hay horas, notificar el mismo día actual
+      fechaNotificacion = new Date();
+    }
 
+    // Crear la notificación programada
     await Notificacion.create({
       idCierre: nuevoCierre.id,
       titulo: `Cierre programado: ${lugarCierre}`,
-      mensaje: `Se ha programado el cierre de ${lugarCierre} desde ${fechaInicio} hasta ${fechaFin}. ${descripcion || ''}`,
+      mensaje: generarMensajeNotificacion(nuevoCierre),
       fechaEnvio: fechaNotificacion.toISOString().split('T')[0],
       enviado: false
     });
 
+    // Obtener el cierre completo con relaciones
     const cierreCompleto = await Cierre.findByPk(nuevoCierre.id, {
       include: [
         { model: Zona, as: 'zona' },
@@ -51,6 +76,25 @@ const crearCierre = async (req, res) => {
     console.error('Error en crearCierre:', error);
     return respuestaError(res, 'Error al crear cierre', 500);
   }
+};
+
+// Función auxiliar para generar mensaje de notificación
+const generarMensajeNotificacion = (cierre) => {
+  let mensaje = `Se ha programado el cierre de ${cierre.lugarCierre}`;
+  
+  if (cierre.fechaInicio && cierre.fechaFin) {
+    mensaje += ` desde ${cierre.fechaInicio} hasta ${cierre.fechaFin}`;
+  }
+  
+  if (cierre.horaInicio && cierre.horaFin) {
+    mensaje += ` de ${cierre.horaInicio} a ${cierre.horaFin}`;
+  }
+  
+  if (cierre.descripcion) {
+    mensaje += `. ${cierre.descripcion}`;
+  }
+  
+  return mensaje;
 };
 
 const listarCierres = async (req, res) => {
@@ -111,7 +155,17 @@ const obtenerCierre = async (req, res) => {
 const actualizarCierre = async (req, res) => {
   try {
     const { id } = req.params;
-    const { categoria, lugarCierre, idZona, fechaInicio, fechaFin, descripcion, estado, ubicaciones } = req.body;
+    const { 
+      categoria, 
+      lugarCierre, 
+      idZona, 
+      fechaInicio, 
+      fechaFin, 
+      horaInicio,
+      horaFin,
+      descripcion, 
+      ubicaciones 
+    } = req.body;
 
     const cierre = await Cierre.findByPk(id);
 
@@ -119,16 +173,20 @@ const actualizarCierre = async (req, res) => {
       return respuestaError(res, 'Cierre no encontrado', 404);
     }
 
+    // Construir objeto de actualización
     const datosActualizados = {};
     if (categoria !== undefined) datosActualizados.categoria = categoria;
     if (lugarCierre) datosActualizados.lugarCierre = lugarCierre;
     if (idZona !== undefined) datosActualizados.idZona = idZona;
-    if (fechaInicio) datosActualizados.fechaInicio = fechaInicio;
-    if (fechaFin) datosActualizados.fechaFin = fechaFin;
+    if (fechaInicio !== undefined) datosActualizados.fechaInicio = fechaInicio || null;
+    if (fechaFin !== undefined) datosActualizados.fechaFin = fechaFin || null;
+    if (horaInicio !== undefined) datosActualizados.horaInicio = horaInicio || null;
+    if (horaFin !== undefined) datosActualizados.horaFin = horaFin || null;
     if (descripcion !== undefined) datosActualizados.descripcion = descripcion;
 
     await cierre.update(datosActualizados);
 
+    // Actualizar ubicaciones si se proporcionaron
     if (ubicaciones && Array.isArray(ubicaciones)) {
       await UbicacionCierre.destroy({ where: { idCierre: id } });
       
@@ -179,15 +237,51 @@ const eliminarCierre = async (req, res) => {
 const obtenerCierresActivos = async (req, res) => {
   try {
     const hoy = new Date().toISOString().split('T')[0];
+    const ahora = new Date();
+    const horaActual = `${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}:${ahora.getSeconds().toString().padStart(2, '0')}`;
 
+    // Buscar cierres que estén activos AHORA
     const cierresActivos = await Cierre.findAll({
       where: {
-        fechaInicio: {
-          [Op.lte]: hoy
-        },
-        fechaFin: {
-          [Op.gte]: hoy
-        }
+        [Op.or]: [
+          // Caso 1: Cierre por fechas (sin horas)
+          {
+            fechaInicio: {
+              [Op.lte]: hoy
+            },
+            fechaFin: {
+              [Op.gte]: hoy
+            },
+            horaInicio: null,
+            horaFin: null
+          },
+          // Caso 2: Cierre por horas del día actual (sin fechas)
+          {
+            fechaInicio: null,
+            fechaFin: null,
+            horaInicio: {
+              [Op.lte]: horaActual
+            },
+            horaFin: {
+              [Op.gte]: horaActual
+            }
+          },
+          // Caso 3: Cierre combinado (fechas + horas)
+          {
+            fechaInicio: {
+              [Op.lte]: hoy
+            },
+            fechaFin: {
+              [Op.gte]: hoy
+            },
+            horaInicio: {
+              [Op.ne]: null
+            },
+            horaFin: {
+              [Op.ne]: null
+            }
+          }
+        ]
       },
       include: [
         { model: Zona, as: 'zona' },

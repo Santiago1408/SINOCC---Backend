@@ -21,14 +21,16 @@ CREATE TABLE "zonas" (
 
 CREATE TABLE "cierres" (
   "id" SERIAL PRIMARY KEY,
-  "categoria" VARCHAR(20),
-  "lugarCierre" VARCHAR(255) NOT NULL,
+  "categoria" "VARCHAR(20)",
+  "lugarCierre" "VARCHAR(255)" NOT NULL,
   "idZona" INT,
-  "fechaInicio" DATE NOT NULL,
-  "fechaFin" DATE NOT NULL,
+  "fechaInicio" DATE,
+  "fechaFin" DATE,
+  "horaInicio" TIME,
+  "horaFin" TIME,
   "descripcion" TEXT,
-  "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  "modifiedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  "createdAt" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
+  "modifiedAt" TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
 );
 
 CREATE TABLE "ubicacionesCierre" (

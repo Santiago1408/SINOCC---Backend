@@ -26,11 +26,19 @@ const Cierre = sequelize.define('Cierre', {
   },
   fechaInicio: {
     type: DataTypes.DATEONLY,
-    allowNull: false
+    allowNull: true  // CAMBIADO: Ahora puede ser NULL
   },
   fechaFin: {
     type: DataTypes.DATEONLY,
-    allowNull: false
+    allowNull: true  // CAMBIADO: Ahora puede ser NULL
+  },
+  horaInicio: {
+    type: DataTypes.TIME,  // NUEVO: Hora de inicio
+    allowNull: true
+  },
+  horaFin: {
+    type: DataTypes.TIME,  // NUEVO: Hora de fin
+    allowNull: true
   },
   descripcion: {
     type: DataTypes.TEXT,

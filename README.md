@@ -265,31 +265,77 @@ Authorization: Bearer {token_admin}
 
 ### Cierres (`/api/cierres`)
 
-#### Crear Cierre (Solo Administradores)
+#### Cierre Solo por Fechas (Varios Días)
 ```http
 POST /api/cierres
-Authorization: Bearer {token_admin}
+Authorization: Bearer {token}
 Content-Type: application/json
 
 {
   "categoria": "Obras",
-  "lugarCierre": "Avenida América entre calles Potosí y Sucre",
+  "lugarCierre": "Av. Blanco Galindo entre 25 de Mayo y Colombia",
   "idZona": 1,
-  "fechaInicio": "2025-10-20",
-  "fechaFin": "2025-10-25",
+  "fechaInicio": "2025-11-15",
+  "fechaFin": "2025-11-18",
+  "horaInicio": null,
+  "horaFin": null,
   "descripcion": "Reparación de pavimento",
   "ubicaciones": [
     {
-      "latitud": -17.3935,
-      "longitud": -66.1570
-    },
-    {
-      "latitud": -17.3945,
-      "longitud": -66.1580
+      "latitud": -17.3895,
+      "longitud": -66.1568
     }
   ]
 }
 ```
+#### Cierre Solo por Horas (Mismo Día)
+```http
+POST /api/cierres
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "categoria": "Mantenimiento",
+  "lugarCierre": "Calle Sucre esquina Bolívar",
+  "idZona": 2,
+  "fechaInicio": null,
+  "fechaFin": null,
+  "horaInicio": "08:00",
+  "horaFin": "12:00",
+  "descripcion": "Limpieza de alcantarillas",
+  "ubicaciones": [
+    {
+      "latitud": -17.3935,
+      "longitud": -66.1570
+    }
+  ]
+}
+```
+
+#### Cierre Solo por Horas (Mismo Día)
+```http
+POST /api/cierres
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "categoria": "Eventos",
+  "lugarCierre": "Plaza Principal",
+  "idZona": 3,
+  "fechaInicio": "2025-12-24",
+  "fechaFin": "2025-12-25",
+  "horaInicio": "18:00",
+  "horaFin": "23:59",
+  "descripcion": "Celebración navideña",
+  "ubicaciones": [
+    {
+      "latitud": -17.3945,
+      "longitud": -66.1575
+    }
+  ]
+}
+```
+
 
 #### Listar Cierres (Público)
 ```http
